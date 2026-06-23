@@ -8,6 +8,7 @@ from odoo.addons.portal.controllers.portal import CustomerPortal, pager as porta
 from odoo.addons.portal.controllers.mail import _message_post_helper
 from odoo import fields as odoo_fields, http, tools, _, SUPERUSER_ID
 import base64
+import binascii
 
 
 class HMSPortal(CustomerPortal):
