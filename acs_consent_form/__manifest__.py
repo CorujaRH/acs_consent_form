@@ -28,6 +28,11 @@
     'website': 'https://www.almightycs.com',
     'license': 'OPL-1',
     'depends': ["mail","portal"],
+    'assets': {
+        'web.assets_frontend': [
+            'acs_consent_form/static/src/js/sign_focus_guard.js',
+        ],
+    },
     'data' : [
         'security/security.xml',
         'security/ir.model.access.csv',
