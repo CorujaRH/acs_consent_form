@@ -144,7 +144,102 @@
                                     <t t-call="portal.signature_form">
                                         <t t-set="call_url" t-value="consent_form.get_portal_sign_url()"/>
                                         <t t-set="default_name" t-value="consent_form.partner_id.name"/>
+                                        <t t-set="mode" t-value="'auto'"/>
                                     </t>
+                                    <script type="text/javascript">
+                                        (function () {
+                                            var AUTOMATIC_LABEL = 'Clique aqui para assinar';
+                                            var RETRY_DELAYS = [0, 100, 250, 500, 1000];
+
+                                            function findAutomaticButton(modal) {
+                                                return modal.querySelector('.o_web_sign_auto_button') ||
+                                                    modal.querySelector('[class*="o_web_sign_auto_button"]') ||
+                                                    modal.querySelector('[data-mode="auto"]') ||
+                                                    modal.querySelector('[data-value="auto"]');
+                                            }
+
+                                            function isActive(button) {
+                                                return button.classList.contains('active') ||
+                                                    button.getAttribute('aria-pressed') === 'true' ||
+                                                    button.getAttribute('aria-selected') === 'true';
+                                            }
+
+                                            function clickButton(button) {
+                                                if (typeof button.click === 'function') {
+                                                    button.click();
+                                                    return;
+                                                }
+                                                var clickEvent = document.createEvent('MouseEvents');
+                                                clickEvent.initMouseEvent('click', true, true, window, 1);
+                                                button.dispatchEvent(clickEvent);
+                                            }
+
+                                            function selectAutomaticSignature(forceClick) {
+                                                var modal = document.getElementById('modalaccept');
+                                                if (!modal) {
+                                                    return false;
+                                                }
+                                                var automaticButton = findAutomaticButton(modal);
+                                                if (!automaticButton) {
+                                                    return false;
+                                                }
+
+                                                automaticButton.textContent = AUTOMATIC_LABEL;
+                                                if (forceClick || !isActive(automaticButton)) {
+                                                    clickButton(automaticButton);
+                                                }
+                                                return true;
+                                            }
+
+                                            function scheduleAutomaticSelection(forceClick) {
+                                                var clicked = false;
+                                                RETRY_DELAYS.forEach(function (delay) {
+                                                    window.setTimeout(function () {
+                                                        if (selectAutomaticSignature(forceClick &amp;&amp; !clicked)) {
+                                                            clicked = true;
+                                                        }
+                                                    }, delay);
+                                                });
+                                            }
+
+                                            function setupAutomaticSignature() {
+                                                var modal = document.getElementById('modalaccept');
+                                                if (!modal) {
+                                                    return;
+                                                }
+
+                                                scheduleAutomaticSelection(true);
+
+                                                modal.addEventListener('shown.bs.modal', function () {
+                                                    scheduleAutomaticSelection(true);
+                                                });
+                                                modal.addEventListener('show.bs.modal', function () {
+                                                    scheduleAutomaticSelection(true);
+                                                });
+
+                                                if (window.jQuery) {
+                                                    window.jQuery(modal).on('shown.bs.modal show.bs.modal', function () {
+                                                        scheduleAutomaticSelection(true);
+                                                    });
+                                                }
+
+                                                if ('MutationObserver' in window) {
+                                                    new MutationObserver(function () {
+                                                        selectAutomaticSignature(false);
+                                                    }).observe(modal, {
+                                                        childList: true,
+                                                        subtree: true
+                                                    });
+                                                }
+                                            }
+
+                                            if (document.readyState === 'loading') {
+                                                document.addEventListener('DOMContentLoaded', setupAutomaticSignature);
+                                            } else {
+                                                setupAutomaticSignature();
+                                            }
+                                        }());
+                                    </script>
                                 </main>
                             </form>
                         </div>
